@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAR: Ultimate Edition (Fixed Size)</title>
+    <title>WAR: Ultimate Edition (Attack Rules)</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -94,20 +94,19 @@
         .connection-line { stroke: rgba(255, 255, 255, 0.5); stroke-width: 2; stroke-dasharray: 6, 6; pointer-events: none; filter: drop-shadow(0 0 2px black); }
         .drag-line { stroke: var(--accent); stroke-width: 4; stroke-dasharray: 10, 10; pointer-events: none; animation: dash 1s linear infinite; }
         
-        /* ESTILO DOS MARCADORES DE ÍCONE (FORÇANDO TAMANHO NO CSS TAMBÉM) */
+        /* ESTILO DOS MARCADORES DE ÍCONE (TAMANHO 35px) */
         .marker-box { pointer-events: none; text-align: center; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
         .marker-icon-img {
-            /* Tamanho reduzido para emoji */
-            width: 25px !important; 
+            width: 35px !important; 
             height: auto !important;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6)); 
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.6)); 
             transition: transform 0.2s;
             margin-bottom: -5px; 
         }
         .marker-box:hover .marker-icon-img { transform: scale(1.2) translateY(-5px); }
         
-        /* CONTADOR TAMBÉM REDUZIDO UM POUCO */
-        .icon-count { background: white; color: black; padding: 0px 4px; border-radius: 4px; font-weight: 900; font-size: 10px; border: 1px solid black; z-index: 10; }
+        /* CONTADOR */
+        .icon-count { background: white; color: black; padding: 0px 4px; border-radius: 4px; font-weight: 900; font-size: 11px; border: 1px solid black; z-index: 10; }
     </style>
 </head>
 <body>
@@ -542,7 +541,7 @@
         document.getElementById('map-container').appendChild(el);
         if(markers[regionName]) {
             const icon = markers[regionName].getElement();
-            icon.classList.add('shake-marker');
+            icon.classList.add('shake-marker'); // Animação de tremor
             setTimeout(() => icon.classList.remove('shake-marker'), 500);
         }
         setTimeout(() => el.remove(), 1500);
@@ -585,6 +584,14 @@
             if(phase === 'attack' || phase === 'move') {
                 if(data.owner === currentPlayer) {
                     if(data.hasActed) { toast("Exército exausto!"); return; }
+                    
+                    // --- CORREÇÃO: REGRA DE MÍNIMO DE EXÉRCITOS ---
+                    // Precisa de pelo menos 2 (1 fica, 1 ataca/move)
+                    if (phase === 'attack' && data.armies < 2) {
+                        toast("Precisa de pelo menos 2 exércitos para atacar!");
+                        return;
+                    }
+
                     if(phase === 'attack') {
                         selectedSource = block;
                         setBlockHighlight(block, 'select');
@@ -629,8 +636,13 @@
                 return;
             }
             if (phase === 'attack') {
+                // --- CORREÇÃO: BLOQUEIO DE AUTO-ATAQUE ---
+                if (tgtData.owner === currentPlayer) {
+                    toast("Você não pode atacar seu próprio território!");
+                    return;
+                }
+                
                 if(tgtData.owner !== currentPlayer) prepareAction(srcName, targetName);
-                else toast("Use a fase de movimentação.");
             }
         } else {
             toast("Sem conexão!");
@@ -690,10 +702,18 @@
             document.getElementById('slider-box').style.display = 'block';
         }
         
-        const maxTroops = gameData[src].armies - 1;
+        // --- NOVA LÓGICA DE DADOS DE ATAQUE ---
+        // 2-4 Exércitos = 1 Dado
+        // 5-9 Exércitos = 2 Dados
+        // 10+ Exércitos = 3 Dados
+        const totalArmies = gameData[src].armies;
+        let maxDice = 1;
+        if (totalArmies >= 10) maxDice = 3;
+        else if (totalArmies >= 5) maxDice = 2;
+
         const slider = document.getElementById('troop-slider');
-        slider.max = Math.max(1, maxTroops); 
-        slider.value = Math.min(3, maxTroops);
+        slider.max = maxDice;
+        slider.value = maxDice;
         updateSliderVal(slider.value);
     }
 
@@ -719,9 +739,41 @@
     function resolveCombat() {
         const s = gameData[actSrc]; const t = gameData[actTgt];
         
-        let nA = isDefending ? Math.min(3, s.armies - 1) : parseInt(document.getElementById('troop-slider').value); 
+        let nA;
+        if (isDefending) {
+            // Se o BOT está atacando (isDefending=true), aplica a mesma regra de dados
+            const amt = s.armies;
+            let allowed = 1;
+            if (amt >= 10) allowed = 3;
+            else if (amt >= 5) allowed = 2;
+            nA = allowed;
+        } else {
+            // Se é o Jogador, pega do slider (que já foi limitado no prepareAction)
+            nA = parseInt(document.getElementById('troop-slider').value); 
+        }
+
         let nD = (t.owner === NEUTRAL && t.armies === 0) ? 1 : Math.min(2, t.armies);
         
+        // --- CORREÇÃO: DEFESA COM ZERO ---
+        // Se o território alvo tiver 0 exércitos, vitória automática
+        if (t.armies === 0) {
+            t.owner = s.owner;
+            t.armies = nA; 
+            s.armies -= nA;
+            t.hasActed = true;
+            showDamage(actTgt, "CONQUISTADO!");
+            
+            if(!isDefending) {
+                toast("VITÓRIA AUTOMÁTICA!");
+                turnConquest = true; 
+            } else toast("TERRITÓRIO PERDIDO!");
+
+            closeBattle();
+            refreshMap();
+            if(isDefending) { isDefending = false; botAttacksCount++; setTimeout(() => runBot(true), 1000); }
+            return;
+        }
+
         let rA = Array.from({length:nA}, ()=>Math.ceil(Math.random()*6)).sort((a,b)=>b-a);
         let rD = Array.from({length:nD}, ()=>Math.ceil(Math.random()*6)).sort((a,b)=>b-a);
         
@@ -733,11 +785,8 @@
         document.getElementById('modal-dice-area').innerHTML = html;
 
         let lossesA = 0; let lossesD = 0;
-        if (t.owner === NEUTRAL && t.armies === 0) { lossesD = 1; lossesA = 0; } 
-        else {
-            let comparisons = Math.min(nA, nD);
-            for(let i=0; i<comparisons; i++) { if (rA[i] > rD[i]) lossesD++; else lossesA++; }
-        }
+        let comparisons = Math.min(nA, nD);
+        for(let i=0; i<comparisons; i++) { if (rA[i] > rD[i]) lossesD++; else lossesA++; }
         
         if(lossesA > 0) { s.armies = Math.max(1, s.armies - lossesA); showDamage(actSrc, "-"+lossesA); }
         if(lossesD > 0 && t.armies > 0) { t.armies = Math.max(0, t.armies - lossesD); showDamage(actTgt, "-"+lossesD); }
@@ -748,7 +797,7 @@
 
         setTimeout(() => {
             let conquered = false;
-            if ((t.owner === NEUTRAL && t.armies === 0 && lossesD > 0) || (t.armies === 0 && t.owner !== NEUTRAL)) {
+            if (t.armies === 0) {
                  t.owner = gameData[actSrc].owner;
                  t.armies = nA; s.armies -= (nA - lossesA); 
                  t.hasActed = true; 
@@ -1053,7 +1102,7 @@
                     html = `
                         <div class="marker-box">
                             <img src="${imgSrc}" class="marker-icon-img" alt="unidade" 
-                                 style="width: 25px !important; height: auto !important; margin-bottom: -5px;"
+                                 style="width: 35px !important; height: auto !important; margin-bottom: -5px;"
                                  onerror="this.style.display='none'">
                             <div class="icon-count" style="border-color:${playerColorHex}; background:white; color:black;">
                                 ${count}
@@ -1073,8 +1122,8 @@
                     const divIcon = L.divIcon({
                         className: '', 
                         html: html, 
-                        iconSize: [25, 40], // Reduzido para centralizar o emoji de 25px
-                        iconAnchor: [12.5, 40] // Ponto central
+                        iconSize: [35, 55], // AUMENTADO E CENTRALIZADO (35 Largura, 55 Altura Total)
+                        iconAnchor: [17.5, 45] // Ponto central (Metade de 35 = 17.5)
                     });
                     markers[block] = L.marker(center, {icon: divIcon, interactive: false}).addTo(map);
                 }
