@@ -9,17 +9,47 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="this.onerror=null; alert('Erro ao carregar CSS do mapa. Verifique a internet.');"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="this.onerror=null; window.leafletError=true;"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6572314594059473" crossorigin="anonymous"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6572314594059473"
-     crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root { --bg: #0f172a; --panel: rgba(15, 23, 42, 0.98); --accent: #fbbf24; --danger: #ef4444; --success: #10b981; }
         body { margin: 0; background: var(--bg); font-family: 'Roboto', sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; user-select: none; color: white; }
         
-        #news-bar { background: #7f1d1d; color: #fecaca; height: 35px; display: flex; align-items: center; overflow: hidden; border-bottom: 3px solid #000; z-index: 3000; font-family: monospace; text-transform: uppercase; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
-        .ticker-wrap { width: 100%; overflow: hidden; }
-        .ticker { display: inline-block; white-space: nowrap; animation: ticker 180s linear infinite; padding-left: 100%; }
+        /* NEWS BAR & LABEL */
+        #news-bar { 
+            background: #7f1d1d; 
+            color: #fecaca; 
+            height: 35px; 
+            display: flex; 
+            align-items: center; 
+            overflow: hidden; 
+            border-bottom: 3px solid #000; 
+            z-index: 3000; 
+            font-family: monospace; 
+            text-transform: uppercase; 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5); 
+            position: relative; 
+        }
+        
+        #news-label {
+            background: #450a0a; /* Vermelho escuro */
+            color: white;
+            font-weight: 900;
+            padding: 0 20px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10; /* Fica acima do texto */
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            font-family: 'Black Ops One', cursive;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .ticker-wrap { flex: 1; overflow: hidden; position: relative; z-index: 1; }
+        /* Velocidade reduzida para 300s (Bem lento) */
+        .ticker { display: inline-block; white-space: nowrap; animation: ticker 300s linear infinite; padding-left: 100%; }
         @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
 
         /* SETUP SCREEN */
@@ -127,30 +157,33 @@
 </head>
 <body>
 
-<div id="news-bar"><div class="ticker-wrap"><div class="ticker" id="news-content"></div></div></div>
+<div id="news-bar">
+    <div id="news-label">NEWS</div>
+    <div class="ticker-wrap"><div class="ticker" id="news-content"></div></div>
+</div>
 
 <div id="setup-screen">
     <div class="setup-card">
         <h1 style="font-family:'Black Ops One'; color:#fbbf24; margin:0 0 10px 0;">GLOBAL WARFARE</h1>
-        <div style="color:#aaa; font-size:0.8rem;">SUA COR</div>
+        <div id="setup-lbl-color" style="color:#aaa; font-size:0.8rem;">SUA COR</div>
         <div class="setup-row">
             <div class="color-btn selected" style="background:#ef4444" onclick="selectColor('#ef4444', this)"></div>
             <div class="color-btn" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)"></div>
             <div class="color-btn" style="background:#10b981" onclick="selectColor('#10b981', this)"></div>
             <div class="color-btn" style="background:#f59e0b" onclick="selectColor('#f59e0b', this)"></div>
         </div>
-        <div style="color:#aaa; font-size:0.8rem;">JOGADORES</div>
+        <div id="setup-lbl-players" style="color:#aaa; font-size:0.8rem;">JOGADORES</div>
         <div class="setup-row">
             <div class="opt-btn selected" onclick="selectCount(1, this)">1</div>
             <div class="opt-btn" onclick="selectCount(2, this)">2</div>
             <div class="opt-btn" onclick="selectCount(3, this)">3</div>
             <div class="opt-btn" onclick="selectCount(4, this)">4</div>
         </div>
-        <div style="color:#aaa; font-size:0.8rem;">DIFICULDADE</div>
+        <div id="setup-lbl-diff" style="color:#aaa; font-size:0.8rem;">DIFICULDADE</div>
         <div class="setup-row">
-            <div class="opt-btn selected" onclick="selectDiff('easy', this)">FÁCIL</div>
-            <div class="opt-btn" onclick="selectDiff('normal', this)">MÉDIO</div>
-            <div class="opt-btn" onclick="selectDiff('hard', this)">DIFÍCIL</div>
+            <div id="btn-easy" class="opt-btn selected" onclick="selectDiff('easy', this)">FÁCIL</div>
+            <div id="btn-normal" class="opt-btn" onclick="selectDiff('normal', this)">MÉDIO</div>
+            <div id="btn-hard" class="opt-btn" onclick="selectDiff('hard', this)">DIFÍCIL</div>
         </div>
         <button id="start-game-btn" class="start-btn" onclick="initGame()">INICIAR (ALEATÓRIO)</button>
         <div id="loading-msg" style="display:none; color:#fbbf24; margin-top:10px; font-size:0.9rem;">Carregando mapa...</div>
@@ -177,7 +210,7 @@
             </div>
         </div>
         <div class="slider-container" style="margin-top:20px;" id="slider-box">
-            <div style="font-size:0.8rem; margin-bottom:5px;">DADOS DE ATAQUE: <span id="troop-sel-val" style="color:var(--danger); font-weight:bold;">1</span></div>
+            <div style="font-size:0.8rem; margin-bottom:5px;"><span id="lbl-dice-atk">DADOS DE ATAQUE</span>: <span id="troop-sel-val" style="color:var(--danger); font-weight:bold;">1</span></div>
             <input type="range" id="troop-slider" min="1" max="3" value="1" oninput="updateSliderVal(this.value)">
         </div>
         <div class="dice-container" id="modal-dice-area"><div style="color:#888; line-height:60px;">Pronto para rolar...</div></div>
@@ -188,19 +221,19 @@
 
 <div id="cards-modal" class="modal-overlay">
     <div class="game-card" style="width: 600px;">
-        <h2 style="font-family:'Black Ops One'; color:var(--success); margin:0">MINHAS CARTAS</h2>
-        <div style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Selecione 3 (Iguais ou Diferentes)</div>
+        <h2 id="modal-cards-title" style="font-family:'Black Ops One'; color:var(--success); margin:0">MINHAS CARTAS</h2>
+        <div id="modal-cards-subtitle" style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Selecione 3 (Iguais ou Diferentes)</div>
         <div class="card-container" id="cards-container"></div>
-        <div id="trade-info" style="color:var(--accent); font-weight:bold; margin:10px 0;">PRÓXIMA TROCA: +<span id="trade-val">4</span> TROPAS</div>
-        <button class="btn-game btn-end" onclick="tradeCards()">TROCAR</button>
-        <button class="btn-game btn-cancel" onclick="closeCards()">FECHAR</button>
+        <div id="trade-info" style="color:var(--accent); font-weight:bold; margin:10px 0;"><span id="lbl-next-trade">PRÓXIMA TROCA</span>: +<span id="trade-val">4</span></div>
+        <button id="btn-trade" class="btn-game btn-end" onclick="tradeCards()">TROCAR</button>
+        <button id="btn-close-cards" class="btn-game btn-cancel" onclick="closeCards()">FECHAR</button>
     </div>
 </div>
 
 <div id="event-modal" class="modal-overlay">
     <div class="game-card" style="width:350px;">
         <div style="font-size:3rem; margin-bottom:10px" id="evt-icon">📢</div>
-        <h2 style="font-family:'Black Ops One'; color:var(--accent); margin:0" id="evt-title">EVENTO</h2>
+        <h2 id="modal-evt-title" style="font-family:'Black Ops One'; color:var(--accent); margin:0">EVENTO</h2>
         <p style="color:#ccc; margin:15px 0" id="evt-desc">Descrição...</p>
         <button class="btn-game btn-end" onclick="closeEvent()">OK</button>
     </div>
@@ -208,10 +241,10 @@
 
 <div id="objective-modal" class="modal-overlay">
     <div class="game-card" style="border-color: #fbbf24;">
-        <h2 style="font-family:'Black Ops One'; color:#fbbf24; margin:0">SUA MISSÃO</h2>
+        <h2 id="modal-obj-title" style="font-family:'Black Ops One'; color:#fbbf24; margin:0">SUA MISSÃO</h2>
         <div style="font-size:3rem; margin:20px 0;">🎯</div>
         <p id="objective-text" style="font-size: 1.2rem; line-height: 1.5; color: white;">Carregando missão...</p>
-        <button class="btn-game btn-end" onclick="closeObjective()">ENTENDIDO</button>
+        <button id="btn-obj-ok" class="btn-game btn-end" onclick="closeObjective()">ENTENDIDO</button>
     </div>
 </div>
 
@@ -237,38 +270,38 @@
         <div id="turn-order-bar"></div>
 
         <div class="header">
-            <h2 style="font-family:'Black Ops One'; color:var(--accent);">COMANDO</h2>
+            <h2 id="ui-lbl-command" style="font-family:'Black Ops One'; color:var(--accent);">COMANDO</h2>
             <div id="turn-info" style="color:#ef4444; font-weight:bold;">---</div>
-            <div id="timer-box">TEMPO: <span id="timer-val">320</span>s</div>
+            <div id="timer-box"><span id="ui-lbl-time">TEMPO</span>: <span id="timer-val">320</span>s</div>
 
             <div id="lang-wrap">
-                <button id="lang-btn">PT-BR ▾</button>
+                <button id="lang-btn">🇧🇷 PT-BR ▾</button>
                 <div id="lang-menu" class="lang-menu" aria-hidden="true">
-                    <button onclick="setLanguage('pt-br')">Português (PT-BR)</button>
-                    <button onclick="setLanguage('en')">English (EN)</button>
-                    <button onclick="setLanguage('es')">Español (ES)</button>
+                    <button onclick="setLanguage('pt-br')">🇧🇷 Português</button>
+                    <button onclick="setLanguage('en')">🇺🇸 English</button>
+                    <button onclick="setLanguage('es')">🇪🇸 Español</button>
                 </div>
                 <button id="ads-toggle" class="ads-toggle" onclick="toggleAds()">Anúncios: Off</button>
             </div>
         </div>
         <div id="reinforce-ui">
-            REFORÇOS: <span id="pool-count">0</span><br>
+            <span id="ui-lbl-reinforce">REFORÇOS</span>: <span id="pool-count">0</span><br>
             <span style="font-size:0.7rem; color:#ccc" id="pool-detail"></span>
         </div>
         <div id="move-ui">FASE DE MOVIMENTAÇÃO</div>
         
         <div class="tab-buttons">
-            <button class="tab-btn active" onclick="switchTab('logs')">DIÁRIO</button>
-            <button class="tab-btn" onclick="switchTab('actions')">AÇÕES</button>
+            <button id="btn-tab-log" class="tab-btn active" onclick="switchTab('logs')">DIÁRIO</button>
+            <button id="btn-tab-act" class="tab-btn" onclick="switchTab('actions')">AÇÕES</button>
         </div>
         <div id="tab-container">
             <div id="tab-logs" class="tab-content active"><div class="log-item">> Sistema online.</div></div>
-            <div id="tab-actions" class="tab-content"><div style="text-align:center; padding:20px; color:#888;">Selecione um território seu.</div></div>
+            <div id="tab-actions" class="tab-content"><div id="msg-select-terr" style="text-align:center; padding:20px; color:#888;">Selecione um território seu.</div></div>
         </div>
         
         <div id="controls">
-            <button class="btn-game" style="background: #7c3aed; margin-bottom: 5px;" onclick="openObjective()">VER MISSÃO 🎯</button>
-            <button class="btn-game btn-cards" onclick="openCards()">VER CARTAS (<span id="card-count-btn">0</span>)</button>
+            <button id="btn-mission" class="btn-game" style="background: #7c3aed; margin-bottom: 5px;" onclick="openObjective()">VER MISSÃO 🎯</button>
+            <button id="btn-cards-open" class="btn-game btn-cards" onclick="openCards()">VER CARTAS (<span id="card-count-btn">0</span>)</button>
             <button id="btn-end" class="btn-game btn-end" onclick="nextPhase()">AVANÇAR FASE</button>
         </div>
     </div>
@@ -280,29 +313,80 @@
         alert("ERRO CRÍTICO: O sistema de mapas não carregou. Verifique sua conexão com a internet ou recarregue a página.");
     }
 
+    // --- VARIÁVEIS GLOBAIS (CORRIGIDO PARA EVITAR ERRO DE REFERÊNCIA) ---
+    // Estas variáveis precisam estar no topo para serem acessíveis por todas as funções
+    let actSrc = null;
+    let actTgt = null;
+    let gameData = {};
+    let markers = {};
+    let players = [];
+    let currentPlayer = 0;
+    let globalTurnCount = 0;
+    let reinforcementPool = 0;
+    let phase = 'reinforce';
+    let selectedSource = null;
+    let isDragging = false;
+    let dragSource = null;
+    let dragLine = null;
+    let isDefending = false;
+    let turnConquest = false; 
+    let tradeValueIndex = 0;
+    let gameTimer = null;
+    let isSpectator = false;
+    let botAttacksCount = 0; 
+    let playerObjective = "";
+    let userColorHex = "#ef4444";
+    let humanPlayers = 1;
+    let difficulty = 'easy';
+    // ---------------------------------------------------------------------
+
     const availableColors = [{name:"VERMELHO",hex:"#ef4444"},{name:"AZUL",hex:"#3b82f6"},{name:"VERDE",hex:"#10b981"},{name:"AMARELO",hex:"#f59e0b"}];
     const colorFileMap = { "#ef4444": "red", "#3b82f6": "blue", "#10b981": "green", "#f59e0b": "yellow", "#64748b": "neutral" };
     const NEUTRAL = 4;
     const CARD_SHAPES = ['■', '●', '▲'];
     const countryFlags = { "Canadá": "🇨🇦", "EUA": "🇺🇸", "México": "🇲🇽", "Groenlândia": "🇬🇱", "América Central": "🌎", "Brasil": "🇧🇷", "Cone Sul": "🇦🇷", "América do Sul": "🇨🇴", "Islândia": "🇮🇸", "Reino Unido": "🇬🇧", "Europa Ocidental": "🇫🇷", "Europa Central": "🇩🇪", "Itália": "🇮🇹", "Europa Oriental": "🇷🇺", "Escandinávia": "🇸🇪", "Rússia": "🇷🇺", "África do Norte": "🇩🇿", "Egito": "🇪🇬", "África Ocidental": "🇳🇬", "África Oriental": "🇰🇪", "África Meridional": "🇿🇦", "Madagascar": "🇲🇬", "Oriente Médio": "🇸🇦", "Ásia Central": "🇰🇿", "Índia": "🇮🇳", "China": "🇨🇳", "Japão": "🇯🇵", "Coreia": "🇰🇷", "Sudeste Asiático": "🇹🇭", "Indonésia": "🇮🇩", "Austrália": "🇦🇺" };
 
-    let userColorHex = "#ef4444", humanPlayers = 1, difficulty = 'easy';
-    let players = [], currentPlayer = 0, globalTurnCount = 0;
-    let gameData = {}, markers = {}, reinforcementPool = 0, phase = 'reinforce', selectedSource = null;
-    let isDragging = false, dragSource = null, dragLine = null;
-    let isDefending = false;
-    let turnConquest = false; 
-    let tradeValueIndex = 0;
     const tradeValues = [4, 6, 8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50];
-    let gameTimer = null;
-    let isSpectator = false;
-    let botAttacksCount = 0; 
-    let playerObjective = "";
 
     const objectivesList = [ "Conquistar a totalidade da EUROPA, da OCEANIA e mais um terceiro continente.", "Conquistar a totalidade da ÁSIA e da AMÉRICA DO SUL.", "Conquistar a totalidade da EUROPA, da AMÉRICA DO SUL e mais um continente.", "Conquistar 18 TERRITÓRIOS e ocupar cada um com 2 exércitos.", "Conquistar a totalidade da ÁSIA e da ÁFRICA.", "Conquistar a totalidade da AMÉRICA DO NORTE e da ÁFRICA.", "Conquistar 24 TERRITÓRIOS à sua escolha.", "Conquistar a totalidade da AMÉRICA DO NORTE e da OCEANIA.", "Destruir totalmente os EXÉRCITOS AZUIS.", "Destruir totalmente os EXÉRCITOS AMARELOS.", "Destruir totalmente os EXÉRCITOS VERMELHOS.", "Destruir totalmente os EXÉRCITOS VERDES.", "Conquistar a totalidade da EUROPA e da AMÉRICA DO NORTE.", "Conquistar a totalidade da EUROPA e da ÁSIA.", "Conquistar a totalidade da OCEANIA, ÁFRICA e AMÉRICA DO SUL.", "Conquistar o MUNDO TODO." ];
     const continents = { "América do Norte": { bonus: 5, countries: ["Canadá", "EUA", "México", "Groenlândia"] }, "América Central": { bonus: 2, countries: ["América Central"] }, "América do Sul": { bonus: 2, countries: ["Brasil", "Cone Sul", "América do Sul"] }, "Europa": { bonus: 5, countries: ["Islândia", "Reino Unido", "Europa Ocidental", "Europa Central", "Europa Oriental", "Escandinávia", "Itália"] }, "África": { bonus: 3, countries: ["África do Norte", "Egito", "África Ocidental", "África Oriental", "África Meridional", "Madagascar"] }, "Ásia": { bonus: 7, countries: ["Rússia", "Oriente Médio", "Ásia Central", "Índia", "China", "Japão", "Coreia", "Sudeste Asiático"] }, "Oceania": { bonus: 2, countries: ["Indonésia", "Austrália"] } };
     const regionMap = { "Canada": "Canadá", "United States of America": "EUA", "Mexico": "México", "Greenland": "Groenlândia", "Cuba": "América Central", "Haiti": "América Central", "Dominican Republic": "América Central", "Jamaica": "América Central", "Guatemala": "América Central", "Honduras": "América Central", "Nicaragua": "América Central", "Costa Rica": "América Central", "Panama": "América Central", "Belize": "América Central", "El Salvador": "América Central", "Bahamas": "América Central", "Brazil": "Brasil", "Argentina": "Cone Sul", "Uruguay": "Cone Sul", "Paraguay": "Cone Sul", "Chile": "Cone Sul", "Colombia": "América do Sul", "Venezuela": "América do Sul", "Peru": "América do Sul", "Ecuador": "América do Sul", "Bolivia": "América do Sul", "Guyana": "América do Sul", "Suriname": "América do Sul", "French Guiana": "América do Sul", "Iceland": "Islândia", "United Kingdom": "Reino Unido", "Ireland": "Reino Unido", "Portugal": "Europa Ocidental", "Spain": "Europa Ocidental", "France": "Europa Ocidental", "Belgium": "Europa Ocidental", "Netherlands": "Europa Ocidental", "Italy": "Itália", "Germany": "Europa Central", "Austria": "Europa Central", "Switzerland": "Europa Central", "Czech Republic": "Europa Central", "Slovakia": "Europa Central", "Hungary": "Europa Central", "Poland": "Europa Central", "Slovenia": "Europa Central", "Croatia": "Europa Central", "Estonia": "Europa Oriental", "Latvia": "Europa Oriental", "Lithuania": "Europa Oriental", "Moldova": "Europa Oriental", "Bosnia and Herzegovina": "Europa Oriental", "Montenegro": "Europa Oriental", "Albania": "Europa Oriental", "Macedonia": "Europa Oriental", "Ukraine": "Europa Oriental", "Belarus": "Europa Oriental", "Romania": "Europa Oriental", "Bulgaria": "Europa Oriental", "Greece": "Europa Oriental", "Serbia": "Europa Oriental", "Kosovo": "Europa Oriental", "Republic of Serbia": "Europa Oriental", "Norway": "Escandinávia", "Sweden": "Escandinávia", "Finland": "Escandinávia", "Denmark": "Escandinávia", "Morocco": "África do Norte", "Algeria": "África do Norte", "Tunisia": "África do Norte", "Libya": "África do Norte", "Sudan": "África do Norte", "Chad": "África do Norte", "South Sudan": "África do Norte", "Central African Republic": "África do Norte", "Western Sahara": "África do Norte", "Egypt": "Egito", "Mauritania": "África Ocidental", "Mali": "África Ocidental", "Niger": "África Ocidental", "Nigeria": "África Ocidental", "Senegal": "África Ocidental", "Ghana": "África Ocidental", "Cameroon": "África Ocidental", "Ivory Coast": "África Ocidental", "Burkina Faso": "África Ocidental", "Guinea": "África Ocidental", "Benin": "África Ocidental", "Togo": "África Ocidental", "Liberia": "África Ocidental", "Sierra Leone": "África Ocidental", "The Gambia": "África Ocidental", "Gambia": "África Ocidental", "Guinea-Bissau": "África Ocidental", "Guinea Bissau": "África Ocidental", "Ethiopia": "África Oriental", "Somalia": "África Oriental", "Kenya": "África Oriental", "Uganda": "África Oriental", "Mozambique": "África Oriental", "Malawi": "África Oriental", "Rwanda": "África Oriental", "United Republic of Tanzania": "África Oriental", "Burundi": "África Oriental", "Somaliland": "África Oriental", "Djibouti": "África Oriental", "Eritrea": "África Oriental", "Tanzania": "África Oriental", "Madagascar": "Madagascar", "South Africa": "África Meridional", "Namibia": "África Meridional", "Botswana": "África Meridional", "Angola": "África Meridional", "Zambia": "África Meridional", "Zimbabwe": "África Meridional", "Congo": "África Meridional", "Democratic Republic of the Congo": "África Meridional", "Gabon": "África Meridional", "Equatorial Guinea": "África Meridional", "Republic of the Congo": "África Meridional", "Lesotho": "África Meridional", "Swaziland": "África Meridional", "Eswatini": "África Meridional", "Russia": "Rússia", "Turkey": "Oriente Médio", "Saudi Arabia": "Oriente Médio", "Iran": "Oriente Médio", "Iraq": "Oriente Médio", "Syria": "Oriente Médio", "Israel": "Oriente Médio", "Yemen": "Oriente Médio", "Oman": "Oriente Médio", "Jordan": "Oriente Médio", "Georgia": "Oriente Médio", "Armenia": "Oriente Médio", "Azerbaijan": "Oriente Médio", "Cyprus": "Oriente Médio", "Northern Cyprus": "Oriente Médio", "Lebanon": "Oriente Médio", "West Bank": "Oriente Médio", "Qatar": "Oriente Médio", "United Arab Emirates": "Oriente Médio", "Kuwait": "Oriente Médio", "Kazakhstan": "Ásia Central", "Uzbekistan": "Ásia Central", "Afghanistan": "Ásia Central", "Pakistan": "Ásia Central", "Turkmenistan": "Ásia Central", "Tajikistan": "Ásia Central", "Kyrgyzstan": "Ásia Central", "India": "Índia", "Nepal": "Índia", "Sri Lanka": "Índia", "Bangladesh": "Índia", "Bhutan": "Índia", "China": "China", "Mongolia": "China", "Japan": "Japão", "Taiwan": "China", "South Korea": "Coreia", "North Korea": "Coreia", "Thailand": "Sudeste Asiático", "Vietnam": "Sudeste Asiático", "Myanmar": "Sudeste Asiático", "Cambodia": "Sudeste Asiático", "Laos": "Sudeste Asiático", "Indonesia": "Indonésia", "Papua New Guinea": "Indonésia", "Philippines": "Indonésia", "Malaysia": "Indonésia", "Brunei": "Indonésia", "Timor-Leste": "Indonésia", "Australia": "Austrália", "New Zealand": "Austrália" };
-    const adjacency = { "Canadá": ["EUA", "Groenlândia"], "EUA": ["Canadá", "México", "Rússia"], "México": ["EUA", "América Central"], "América Central": ["México", "América do Sul", "Brasil"], "Groenlândia": ["Canadá", "Islândia"], "América do Sul": ["América Central", "Brasil", "Cone Sul"], "Brasil": ["América do Sul", "Cone Sul", "África Ocidental"], "Cone Sul": ["América do Sul", "Brasil"], "Islândia": ["Groenlândia", "Reino Unido", "Escandinávia"], "Reino Unido": ["Islândia", "Europa Ocidental", "Escandinávia"], "Escandinávia": ["Reino Unido", "Islândia", "Europa Ocidental", "Europa Central", "Europa Oriental", "Rússia"], "Europa Ocidental": ["Reino Unido", "Escandinávia", "Europa Central", "Itália", "África do Norte"], "Europa Central": ["Europa Ocidental", "Escandinávia", "Europa Oriental", "Itália", "República da Sérvia"], "Itália": ["Europa Ocidental", "Europa Central", "Europa Oriental", "África do Norte"], "Europa Oriental": ["Escandinávia", "Europa Central", "Itália", "Oriente Médio", "Egito", "Rússia"], "Rússia": ["Escandinávia", "Europa Oriental", "Oriente Médio", "China", "EUA"], "África do Norte": ["Europa Ocidental", "Itália", "Egito", "África Ocidental"], "Egito": ["África do Norte", "Europa Oriental", "Oriente Médio", "África Oriental"], "África Ocidental": ["Brasil", "África do Norte", "África Meridional"], "África Oriental": ["Egito", "Oriente Médio", "África Meridional", "Madagascar"], "África Meridional": ["África Ocidental", "África Oriental", "Madagascar"], "Madagascar": ["África Oriental", "África Meridional"], "Oriente Médio": ["Europa Oriental", "Egito", "Rússia", "Ásia Central", "Índia"], "Ásia Central": ["Rússia", "Oriente Médio", "Índia", "China"], "Índia": ["Oriente Médio", "Ásia Central", "China", "Sudeste Asiático", "Indonésia"], "China": ["Rússia", "Ásia Central", "Índia", "Sudeste Asiático", "Japão", "Coreia"], "Japão": ["China", "Coreia"], "Coreia": ["China", "Japão"], "Sudeste Asiático": ["Índia", "China", "Indonésia"], "Indonésia": ["Sudeste Asiático", "Austrália", "Índia"], "Austrália": ["Indonésia"] };
+    
+    // CORREÇÃO: Removida a referência inválida a "República da Sérvia" para evitar crash
+    const adjacency = { 
+        "Canadá": ["EUA", "Groenlândia"], 
+        "EUA": ["Canadá", "México", "Rússia"], 
+        "México": ["EUA", "América Central"], 
+        "América Central": ["México", "América do Sul", "Brasil"], 
+        "Groenlândia": ["Canadá", "Islândia"], 
+        "América do Sul": ["América Central", "Brasil", "Cone Sul"], 
+        "Brasil": ["América do Sul", "Cone Sul", "África Ocidental"], 
+        "Cone Sul": ["América do Sul", "Brasil"], 
+        "Islândia": ["Groenlândia", "Reino Unido", "Escandinávia"], 
+        "Reino Unido": ["Islândia", "Europa Ocidental", "Escandinávia"], 
+        "Escandinávia": ["Reino Unido", "Islândia", "Europa Ocidental", "Europa Central", "Europa Oriental", "Rússia"], 
+        "Europa Ocidental": ["Reino Unido", "Escandinávia", "Europa Central", "Itália", "África do Norte"], 
+        "Europa Central": ["Europa Ocidental", "Escandinávia", "Europa Oriental", "Itália"], 
+        "Itália": ["Europa Ocidental", "Europa Central", "Europa Oriental", "África do Norte"], 
+        "Europa Oriental": ["Escandinávia", "Europa Central", "Itália", "Oriente Médio", "Egito", "Rússia"], 
+        "Rússia": ["Escandinávia", "Europa Oriental", "Oriente Médio", "China", "EUA"], 
+        "África do Norte": ["Europa Ocidental", "Itália", "Egito", "África Ocidental"], 
+        "Egito": ["África do Norte", "Europa Oriental", "Oriente Médio", "África Oriental"], 
+        "África Ocidental": ["Brasil", "África do Norte", "África Meridional"], 
+        "África Oriental": ["Egito", "Oriente Médio", "África Meridional", "Madagascar"], 
+        "África Meridional": ["África Ocidental", "África Oriental", "Madagascar"], 
+        "Madagascar": ["África Oriental", "África Meridional"], 
+        "Oriente Médio": ["Europa Oriental", "Egito", "Rússia", "Ásia Central", "Índia"], 
+        "Ásia Central": ["Rússia", "Oriente Médio", "Índia", "China"], 
+        "Índia": ["Oriente Médio", "Ásia Central", "China", "Sudeste Asiático", "Indonésia"], 
+        "China": ["Rússia", "Ásia Central", "Índia", "Sudeste Asiático", "Japão", "Coreia"], 
+        "Japão": ["China", "Coreia"], 
+        "Coreia": ["China", "Japão"], 
+        "Sudeste Asiático": ["Índia", "China", "Indonésia"], 
+        "Indonésia": ["Sudeste Asiático", "Austrália", "Índia"], 
+        "Austrália": ["Indonésia"] 
+    };
+
     const visualRoutes = [ ["Groenlândia", "Islândia"], ["Groenlândia", "Canadá"], ["Islândia", "Reino Unido"], ["Reino Unido", "Europa Ocidental"], ["Brasil", "África Ocidental"], ["Madagascar", "África Meridional"], ["Japão", "Coreia"], ["Japão", "China"], ["Indonésia", "Austrália"] ];
     const manualCenters = { "Rússia": [60, 95], "Brasil": [-10, -55], "Indonésia": [0, 115], "Canadá": [55, -100], "Coreia": [37, 127], "África Ocidental": [12, 0], "Europa Oriental": [48, 25], "Ásia Central": [42, 65], "EUA": [38, -97], "Alasca": [64, -155], "Sibéria": [66, 175] };
 
@@ -552,9 +636,71 @@
 
     let currentLang = localStorage.getItem('game_lang') || 'pt-br';
     const translations = {
-        'pt-br': { start: 'INICIAR', mission: 'VER MISSÃO 🎯', cards: 'VER CARTAS', advance: 'AVANÇAR FASE', victoryTitle: 'VITÓRIA!', defeatTitle: 'DERROTA', exit: 'SAIR / REINICIAR', spectate: 'ASSISTIR', adsOn: 'Anúncios: On', adsOff: 'Anúncios: Off' },
-        'en':    { start: 'START', mission: 'VIEW MISSION 🎯', cards: 'VIEW CARDS', advance: 'NEXT PHASE', victoryTitle: 'VICTORY!', defeatTitle: 'DEFEAT', exit: 'EXIT / RESTART', spectate: 'SPECTATE', adsOn: 'Ads: On', adsOff: 'Ads: Off' },
-        'es':    { start: 'INICIAR', mission: 'VER MISIÓN 🎯', cards: 'VER CARTAS', advance: 'AVANZAR FASE', victoryTitle: '¡VICTORIA!', defeatTitle: 'DERROTA', exit: 'SALIR / REINICIAR', spectate: 'ESPECTAR', adsOn: 'Anuncios: On', adsOff: 'Anuncios: Off' }
+        'pt-br': { 
+            // News
+            news: 'NEWS',
+            // Setup
+            lbl_color: 'SUA COR', lbl_players: 'JOGADORES', lbl_diff: 'DIFICULDADE',
+            btn_easy: 'FÁCIL', btn_normal: 'MÉDIO', btn_hard: 'DIFÍCIL', start: 'INICIAR',
+            // UI
+            command: 'COMANDO', time: 'TEMPO', reinforce: 'REFORÇOS',
+            movePhase: 'FASE DE MOVIMENTAÇÃO', attackPhase: 'FASE DE ATAQUE',
+            log: 'DIÁRIO', actions: 'AÇÕES', selectTerr: 'Selecione um território seu.',
+            // Buttons
+            mission: 'VER MISSÃO 🎯', cards: 'VER CARTAS', advance: 'AVANÇAR FASE', endTurn: 'ENCERRAR TURNO',
+            moveToMove: 'IR PARA MOVIMENTAÇÃO',
+            // Modals
+            combat: 'COMBATE', attacker: 'ATACANTE', defender: 'DEFENSOR', 
+            diceAtk: 'DADOS DE ATAQUE', rollAtk: 'RODAR ATAQUE', rollDef: 'RODAR DEFESA', retreat: 'RECUAR',
+            myCards: 'MINHAS CARTAS', selectCards: 'Selecione 3 (Iguais ou Diferentes)',
+            nextTrade: 'PRÓXIMA TROCA', trade: 'TROCAR', close: 'FECHAR',
+            event: 'EVENTO', missionTitle: 'SUA MISSÃO', understood: 'ENTENDIDO',
+            victory: 'VITÓRIA!', defeat: 'DERROTA', gameOver: 'FIM DE JOGO',
+            spectate: 'ASSISTIR', exit: 'SAIR / REINICIAR',
+            adsOn: 'Anúncios: On', adsOff: 'Anúncios: Off' 
+        },
+        'en': { 
+            news: 'NEWS',
+            lbl_color: 'YOUR COLOR', lbl_players: 'PLAYERS', lbl_diff: 'DIFFICULTY',
+            btn_easy: 'EASY', btn_normal: 'NORMAL', btn_hard: 'HARD', start: 'START',
+            command: 'COMMAND', time: 'TIME', reinforce: 'REINFORCEMENTS',
+            movePhase: 'MOVEMENT PHASE', attackPhase: 'ATTACK PHASE',
+            log: 'LOG', actions: 'ACTIONS', selectTerr: 'Select your territory.',
+            mission: 'VIEW MISSION 🎯', cards: 'VIEW CARDS', advance: 'NEXT PHASE', endTurn: 'END TURN',
+            moveToMove: 'GO TO MOVEMENT',
+            combat: 'COMBAT', attacker: 'ATTACKER', defender: 'DEFENDER', 
+            diceAtk: 'ATTACK DICE', rollAtk: 'ROLL ATTACK', rollDef: 'ROLL DEFENSE', retreat: 'RETREAT',
+            myCards: 'MY CARDS', selectCards: 'Select 3 (Same or Different)',
+            nextTrade: 'NEXT TRADE', trade: 'TRADE', close: 'CLOSE',
+            event: 'EVENT', missionTitle: 'YOUR MISSION', understood: 'UNDERSTOOD',
+            victory: 'VICTORY!', defeat: 'DEFEAT', gameOver: 'GAME OVER',
+            spectate: 'SPECTATE', exit: 'EXIT / RESTART',
+            adsOn: 'Ads: On', adsOff: 'Ads: Off'
+        },
+        'es': { 
+            news: 'NOTICIAS',
+            lbl_color: 'TU COLOR', lbl_players: 'JUGADORES', lbl_diff: 'DIFICULTAD',
+            btn_easy: 'FÁCIL', btn_normal: 'MEDIO', btn_hard: 'DIFÍCIL', start: 'INICIAR',
+            command: 'COMANDO', time: 'TIEMPO', reinforce: 'REFUERZOS',
+            movePhase: 'FASE DE MOVIMIENTO', attackPhase: 'FASE DE ATAQUE',
+            log: 'DIARIO', actions: 'ACCIONES', selectTerr: 'Selecciona tu territorio.',
+            mission: 'VER MISIÓN 🎯', cards: 'VER CARTAS', advance: 'AVANZAR FASE', endTurn: 'TERMINAR TURNO',
+            moveToMove: 'IR A MOVIMIENTO',
+            combat: 'COMBATE', attacker: 'ATACANTE', defender: 'DEFENSOR', 
+            diceAtk: 'DADOS DE ATAQUE', rollAtk: 'LANZAR ATAQUE', rollDef: 'LANZAR DEFENSA', retreat: 'RETIRADA',
+            myCards: 'MIS CARTAS', selectCards: 'Selecciona 3 (Iguales o Diferentes)',
+            nextTrade: 'PRÓXIMO CAMBIO', trade: 'CAMBIAR', close: 'CERRAR',
+            event: 'EVENTO', missionTitle: 'TU MISIÓN', understood: 'ENTENDIDO',
+            victory: '¡VICTORIA!', defeat: 'DERROTA', gameOver: 'FIN DEL JUEGO',
+            spectate: 'ESPECTAR', exit: 'SALIR / REINICIAR',
+            adsOn: 'Anuncios: On', adsOff: 'Anuncios: Off'
+        }
+    };
+
+    // CORREÇÃO DE SEGURANÇA NA TRADUÇÃO
+    const t = (k) => {
+        const lang = translations[currentLang] ? currentLang : 'pt-br';
+        return translations[lang][k] || translations['pt-br'][k] || k;
     };
 
     function setLanguage(lang) {
@@ -562,7 +708,10 @@
         localStorage.setItem('game_lang', lang);
         applyLanguage();
         document.getElementById('lang-menu').style.display = 'none';
-        document.getElementById('lang-btn').innerText = (lang === 'pt-br' ? 'PT-BR ▾' : (lang === 'en' ? 'EN ▾' : 'ES ▾'));
+        let label = '🇧🇷 PT-BR ▾';
+        if (lang === 'en') label = '🇺🇸 EN ▾';
+        if (lang === 'es') label = '🇪🇸 ES ▾';
+        document.getElementById('lang-btn').innerText = label;
     }
 
     let adsEnabled = (localStorage.getItem('ads_enabled') === 'true') || false;
@@ -570,8 +719,7 @@
         adsEnabled = typeof force === 'boolean' ? force : !adsEnabled;
         localStorage.setItem('ads_enabled', adsEnabled ? 'true' : 'false');
         const btn = document.getElementById('ads-toggle');
-        const tr = translations[currentLang] || translations['pt-br'];
-        if (btn) { btn.innerText = adsEnabled ? (tr.adsOn || 'Ads: On') : (tr.adsOff || 'Ads: Off'); btn.classList.toggle('on', adsEnabled); }
+        if (btn) { btn.innerText = adsEnabled ? t('adsOn') : t('adsOff'); btn.classList.toggle('on', adsEnabled); }
         document.querySelectorAll('.ad-banner, .sidebar-ad, .ad-top, .ad-bottom, .ad-square, .ad-grid').forEach(el => el.style.display = adsEnabled ? 'flex' : 'none');
         if (adsEnabled) {
             try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
@@ -590,15 +738,61 @@
     }
 
     function applyLanguage() {
-        const tr = translations[currentLang] || translations['pt-br'];
-        document.querySelectorAll('.start-btn').forEach(b => b.innerText = tr.start + ' (RANDOM)');
-        document.querySelector('#controls .btn-game:nth-child(1)').innerText = tr.mission;
-        const cardsBtn = document.querySelector('#controls .btn-cards');
-        if (cardsBtn) cardsBtn.childNodes[0] ? cardsBtn.childNodes[0].nodeValue = tr.cards + ' ' : cardsBtn.innerText = tr.cards;
-        const adv = document.getElementById('btn-end'); if (adv) adv.innerText = tr.advance;
-        document.getElementById('btn-restart').innerText = tr.exit;
-        document.getElementById('btn-spectate').innerText = tr.spectate;
-        const btn = document.getElementById('ads-toggle'); if (btn) btn.innerText = adsEnabled ? (tr.adsOn || 'Ads: On') : (tr.adsOff || 'Ads: Off');
+        // News
+        document.getElementById('news-label').innerText = t('news');
+        // Setup
+        document.getElementById('setup-lbl-color').innerText = t('lbl_color');
+        document.getElementById('setup-lbl-players').innerText = t('lbl_players');
+        document.getElementById('setup-lbl-diff').innerText = t('lbl_diff');
+        document.getElementById('btn-easy').innerText = t('btn_easy');
+        document.getElementById('btn-normal').innerText = t('btn_normal');
+        document.getElementById('btn-hard').innerText = t('btn_hard');
+        document.querySelectorAll('.start-btn').forEach(b => b.innerText = t('start') + ' (RANDOM)');
+        
+        // UI
+        document.getElementById('ui-lbl-command').innerText = t('command');
+        document.getElementById('ui-lbl-time').innerText = t('time');
+        document.getElementById('ui-lbl-reinforce').innerText = t('reinforce');
+        document.getElementById('move-ui').innerText = t('movePhase');
+        document.getElementById('btn-tab-log').innerText = t('log');
+        document.getElementById('btn-tab-act').innerText = t('actions');
+        document.getElementById('msg-select-terr').innerText = t('selectTerr');
+        
+        // Controls
+        document.getElementById('btn-mission').innerText = t('mission');
+        const cardsBtn = document.getElementById('btn-cards-open');
+        if (cardsBtn) cardsBtn.childNodes[0] ? cardsBtn.childNodes[0].nodeValue = t('cards') + ' ' : cardsBtn.innerText = t('cards');
+        
+        // Dynamic Button Update Logic check
+        const btnEnd = document.getElementById('btn-end');
+        if (phase === 'reinforce') btnEnd.innerText = t('advance'); // Placeholder, updated in logic
+        else if (phase === 'attack') btnEnd.innerText = t('moveToMove');
+        else if (phase === 'move') btnEnd.innerText = t('endTurn');
+        
+        document.getElementById('btn-restart').innerText = t('exit');
+        document.getElementById('btn-spectate').innerText = t('spectate');
+        
+        // Modals
+        document.getElementById('battle-title').innerText = t('combat');
+        document.getElementById('modal-atk-name').innerText = t('attacker'); // Placeholder, overwritten on open
+        document.getElementById('modal-def-name').innerText = t('defender');
+        document.getElementById('lbl-dice-atk').innerText = t('diceAtk');
+        document.getElementById('btn-roll').innerText = isDefending ? t('rollDef') : t('rollAtk');
+        document.getElementById('btn-retreat').innerText = t('retreat');
+        
+        document.getElementById('modal-cards-title').innerText = t('myCards');
+        document.getElementById('modal-cards-subtitle').innerText = t('selectCards');
+        document.getElementById('lbl-next-trade').innerText = t('nextTrade');
+        document.getElementById('btn-trade').innerText = t('trade');
+        document.getElementById('btn-close-cards').innerText = t('close');
+        
+        document.getElementById('modal-evt-title').innerText = t('event');
+        document.getElementById('modal-obj-title').innerText = t('missionTitle');
+        document.getElementById('btn-obj-ok').innerText = t('understood');
+        document.getElementById('endgame-title').innerText = t('gameOver');
+        
+        const btnAds = document.getElementById('ads-toggle'); 
+        if (btnAds) btnAds.innerText = adsEnabled ? t('adsOn') : t('adsOff');
     }
 
     function showEndGame(isVictory, msg, winnerId) {
@@ -608,16 +802,15 @@
         document.getElementById('endgame-msg').innerText = msg;
         const title = document.getElementById('endgame-title');
         const btnSpec = document.getElementById('btn-spectate');
-        const btnRestart = document.getElementById('btn-restart');
         
-        document.getElementById('input-blocker').style.display = 'none'; // Libera clicks
+        document.getElementById('input-blocker').style.display = 'none'; 
 
         if (isVictory) {
-            title.innerText = translations[currentLang].victoryTitle || 'VITÓRIA!';
+            title.innerText = t('victory');
             title.style.color = "#10b981";
             btnSpec.style.display = "none"; 
         } else {
-            title.innerText = translations[currentLang].defeatTitle || 'DERROTA';
+            title.innerText = t('defeat');
             title.style.color = "#ef4444";
             btnSpec.style.display = "inline-block";
         }
@@ -631,7 +824,7 @@
         if (!menu.contains(e.target)) menu.style.display = 'none';
     });
     applyLanguage();
-    document.getElementById('lang-btn').innerText = (currentLang === 'pt-br' ? 'PT-BR ▾' : (currentLang === 'en' ? 'EN ▾' : 'ES ▾'));
+    document.getElementById('lang-btn').innerText = (currentLang === 'pt-br' ? '🇧🇷 PT-BR ▾' : (currentLang === 'en' ? '🇺🇸 EN ▾' : '🇪🇸 ES ▾'));
     toggleAds(adsEnabled);
     window.addEventListener('load', () => { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {} });
 
@@ -815,7 +1008,6 @@
         }
     }
 
-    let actSrc, actTgt;
     function prepareAction(src, tgt) {
         actSrc = src; actTgt = tgt;
         document.getElementById('battle-modal').style.display = 'flex';
@@ -827,11 +1019,11 @@
         document.getElementById('btn-roll').style.display = 'inline-block';
         document.getElementById('btn-retreat').style.display = 'inline-block';
         if(isDefending) {
-            document.getElementById('btn-roll').innerText = "RODAR DEFESA";
+            document.getElementById('btn-roll').innerText = t('rollDef');
             document.getElementById('btn-retreat').style.display = 'none';
             document.getElementById('slider-box').style.display = 'none';
         } else {
-            document.getElementById('btn-roll').innerText = "RODAR ATAQUE";
+            document.getElementById('btn-roll').innerText = t('rollAtk');
             document.getElementById('slider-box').style.display = 'block';
         }
         const totalArmies = gameData[src].armies;
@@ -841,12 +1033,16 @@
         slider.max = maxDice; slider.value = maxDice; updateSliderVal(slider.value);
     }
     function updateSliderVal(val) { document.getElementById('troop-sel-val').innerText = val; }
+    
     function triggerDefense(src, tgt) {
-        isDefending = true; actSrc = src; actTgt = tgt; 
+        isDefending = true; 
+        actSrc = src; 
+        actTgt = tgt; 
         document.getElementById('battle-title').innerText = "VOCÊ ESTÁ SENDO ATACADO!";
         document.getElementById('battle-title').style.color = "var(--danger)";
         prepareAction(src, tgt);
     }
+
     function startCombatAnimation() {
         document.getElementById('btn-roll').style.display = 'none';
         document.getElementById('btn-retreat').style.display = 'none';
@@ -917,14 +1113,20 @@
         const humanP = players.find(p => !p.isBot);
         const container = document.getElementById('cards-container');
         container.innerHTML = '';
+        
         humanP.cards.forEach((c) => {
             let flag = countryFlags[c.territory] || "🏳️"; 
             let div = document.createElement('div');
             div.className = 'war-card';
-            div.innerHTML = `<div class="card-symbol">${c.shape}</div><div class="card-flag">${flag}</div><div class="card-name">${c.territory}</div>`;
+            div.innerHTML = `
+                <div style="position: absolute; top: 5px; left: 8px; font-size: 1.2rem; color: #666;">${c.shape}</div>
+                <div style="font-size: 3.5rem; margin-top: 15px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">${flag}</div>
+                <div class="card-name" style="margin-top: auto; padding-bottom: 5px;">${c.territory}</div>
+            `;
             div.onclick = () => { div.classList.toggle('selected'); };
             container.appendChild(div);
         });
+        
         document.getElementById('trade-val').innerText = tradeValues[Math.min(tradeValueIndex, tradeValues.length-1)];
         document.getElementById('cards-modal').style.display = 'flex';
     }
@@ -937,7 +1139,7 @@
         let shapes = [];
         let territories = [];
         selectedEls.forEach(el => {
-            const shape = el.querySelector('.card-symbol').innerText;
+            const shape = el.querySelector('div:first-child').innerText; // Pega o simbolo do canto
             const terr = el.querySelector('.card-name').innerText;
             shapes.push(shape); territories.push(terr);
         });
@@ -1040,7 +1242,7 @@
         
         document.getElementById('controls').style.display = 'block';
         const btn = document.getElementById('btn-end');
-        btn.innerText = "AVANÇAR FASE";
+        btn.innerText = t('advance');
         btn.style.background = "#fbbf24"; 
         btn.style.opacity = '0.5';
         btn.style.pointerEvents = 'none'; 
@@ -1098,7 +1300,8 @@
             const src = srcs[Math.floor(Math.random()*srcs.length)];
             let tgt = null;
             if(adjacency[src]) {
-                if (difficulty === 'hard') tgt = adjacency[src].find(t => gameData[t].owner === 0);
+                const humanId = players.findIndex(p => !p.isBot);
+                if (difficulty === 'hard') tgt = adjacency[src].find(t => gameData[t].owner === humanId);
                 if(!tgt) tgt = adjacency[src].find(t => gameData[t].owner !== pId);
             }
             if(tgt) {
@@ -1124,26 +1327,42 @@
     }
 
     function updateMarkers() {
+        // Limpa marcadores antigos
         for(let k in markers) map.removeLayer(markers[k]);
         markers = {};
+
         Object.keys(gameData).forEach(block => {
             const data = gameData[block];
             let center = getRegionCenter(block);
+            
             if(center) {
                 const playerColorHex = players[data.owner].color;
                 const colorName = colorFileMap[playerColorHex] || "neutral";
                 const count = data.armies;
+
                 let unitType = "soldier";
-                if (count >= 10 && count < 20) unitType = "tank"; else if (count >= 20) unitType = "helicopter"; 
+                if (count >= 10 && count < 18) unitType = "tank"; 
+                else if (count >= 18) unitType = "helicopter"; 
+                
                 let html = '';
+                
                 if (data.owner !== NEUTRAL) {
                     const imgSrc = `${unitType}_${colorName}.png`; 
-                    html = `<div class="marker-box"><img src="${imgSrc}" class="marker-icon-img" alt="unidade" style="width: 35px !important; height: auto !important; margin-bottom: -5px;" onerror="this.style.display='none'"><div class="icon-count" style="border-color:${playerColorHex}; background:white; color:black;">${count}</div></div>`;
+                    html = `
+                        <div class="marker-box">
+                            <img src="${imgSrc}" class="marker-icon-img" 
+                                 alt="unidade" 
+                                 style="width: 40px !important; height: auto !important; margin-bottom: -8px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.8));" 
+                                 onerror="this.style.display='none'; console.log('Imagem faltando:', '${imgSrc}')">
+                            <div class="icon-count" style="border-color:${playerColorHex}; background:white; color:black;">${count}</div>
+                        </div>
+                    `;
                 } else if(count > 0) {
                     html = `<div class="marker-box"><div class="icon-count" style="border-color:#64748b; background:#ccc;">${count}</div></div>`;
                 }
+
                 if (html) {
-                    const divIcon = L.divIcon({ className: '', html: html, iconSize: [35, 55], iconAnchor: [17.5, 45] });
+                    const divIcon = L.divIcon({ className: '', html: html, iconSize: [40, 60], iconAnchor: [20, 50] });
                     markers[block] = L.marker(center, {icon: divIcon, interactive: false}).addTo(map);
                 }
             }
@@ -1153,7 +1372,48 @@
     function refreshMap() { geoJsonLayer.setStyle(getStyle); updateMarkers(); }
     function log(m) { const d = document.createElement('div'); d.className='log-item'; d.innerText = "> "+m; document.getElementById('tab-logs').prepend(d); }
     function toast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); }
-    function startNewsTicker() { const el = document.getElementById('news-content'); let c = ""; const newsDb = ["Café declarado moeda.", "Pinguins exigem ar condicionado.", "Gatos assumem a ONU.", "Robôs em greve.", "Vulcão acorda.", "Proibido meias com sandálias.", "Marte declara independência.", "Chuva de hambúrgueres.", "Zumbis no metrô."]; newsDb.forEach(n => c += ` ★ ${n} &nbsp;&nbsp;&nbsp; `); el.innerHTML = c + c + c; }
+    
+    function startNewsTicker() {
+        const el = document.getElementById('news-content');
+        
+        const newsDb = [
+            "URGENTE: Cientistas admitem que a Terra pode ter formato de rosquinha.",
+            "ECONOMIA: Banco Central passa a aceitar abraços como forma de pagamento.",
+            "NATUREZA: Pombos formam sindicato e exigem migalhas de melhor qualidade.",
+            "POLITICA: Proibido ficar triste em dias úteis, decreta novo governo.",
+            "TECNOLOGIA: Inteligência Artificial decide tirar férias no Caribe.",
+            "ALERTA: Gravidade será desligada para manutenção na próxima terça-feira.",
+            "COTIDIANO: Homem tenta processar o sol por estar muito quente.",
+            "ESPAÇO: A Lua foi vendida para um bilionário anônimo.",
+            "CLIMA: Nuvens entram em greve e se recusam a chover no fim de semana.",
+            "SAUDE: Estudo comprova que comer pizza conta como salada.",
+            "MUNDO: O oceano Atlântico pediu mudança de nome para Pacífico 2.",
+            "TECNOLOGIA: Wi-Fi agora é transmitido por telepatia em testes iniciais.",
+            "SOCIEDADE: Vira-latas caramelo são oficialmente tombados como patrimônio mundial.",
+            "CULTURA: Mímicos quebram o silêncio em protesto barulhento.",
+            "TRANSITO: Engarrafamento fantasma assombra motoristas há 3 dias.",
+            "ESPORTE: Campeonato de pedra, papel e tesoura atrai multidões.",
+            "EDUCACAO: Escola substitui matemática por aulas de memes.",
+            "GASTRONOMIA: Inventaram um sorvete sabor feijoada e ninguém sabe o porquê.",
+            "HISTORIA: Viajante do tempo é preso por tentar vender spoilers de 2050.",
+            "MODA: Pijamas agora são trajes de gala obrigatórios em casamentos.",
+            "CIENCIA: Descoberto novo elemento químico feito apenas de preguiça.",
+            "MUNDO: Pinguins da Antártida exigem aquecedores centrais.",
+            "ECONOMIA: Inflação cai após governo imprimir dinheiro em guardanapos.",
+            "INTERNET: O botão de 'pular anúncio' foi removido da realidade.",
+            "GERAL: Fim do mundo adiado devido ao mau tempo.",
+            "POLITICA: Gatos exigem direito a voto e prometem ração grátis.",
+            "COTIDIANO: Proibido usar a letra A em documentos oficiais a partir de hoje.",
+            "SAUDE: Dormir 18 horas por dia é o novo segredo da produtividade."
+        ];
+
+        newsDb.sort(() => Math.random() - 0.5);
+
+        let c = "";
+        newsDb.forEach(n => c += ` *** ${n}      `);
+
+        el.innerHTML = c + c + c;
+    }
     
     function triggerEvent() { /* Evento aleatório simples para sabor */ }
 
@@ -1162,16 +1422,28 @@
             phase = 'attack';
             document.getElementById('reinforce-ui').style.display = 'none';
             const btn = document.getElementById('btn-end');
-            btn.innerText = "IR PARA MOVIMENTAÇÃO";
+            btn.innerText = t('moveToMove');
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto'; 
             btn.style.background = "#ef4444"; 
             btn.style.color = "white";
-            toast("Fase de Ataque!");
+            toast(t('attackPhase'));
         }
     }
     
-    function nextPhase() { if (phase === 'attack') { phase = 'move'; document.getElementById('move-ui').style.display = 'block'; document.getElementById('btn-end').innerText = "ENCERRAR TURNO"; document.getElementById('btn-end').style.background = "#10b981"; toast("Movimentação: Reforce suas fronteiras."); } else if (phase === 'move') { endTurn(); } }
+    function nextPhase() { 
+        if (phase === 'attack') { 
+            phase = 'move'; 
+            document.getElementById('move-ui').style.display = 'block'; 
+            document.getElementById('move-ui').innerText = t('movePhase');
+            const btn = document.getElementById('btn-end');
+            btn.innerText = t('endTurn'); 
+            btn.style.background = "#10b981"; 
+            toast(t('movePhase')); 
+        } else if (phase === 'move') { 
+            endTurn(); 
+        } 
+    }
     
     function updateUI() {
         document.getElementById('pool-count').innerText = reinforcementPool;
